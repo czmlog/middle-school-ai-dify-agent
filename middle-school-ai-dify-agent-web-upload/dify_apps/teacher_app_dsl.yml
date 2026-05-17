@@ -1,0 +1,679 @@
+app:
+  description: 面向中学信息科技教师的人工智能课程教学设计、实验单生成、项目评价与学情分析工作流。
+  icon: 📋
+  icon_background: '#ECFDF3'
+  icon_type: emoji
+  mode: workflow
+  name: AI课程教学设计与评价助手（教师端）
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.15@725407927b04e236212083d20e92830d60fa944e42cd357ef6902c160414f6f1
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions: []
+      allowed_file_types: []
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      configs: []
+      enabled: false
+      type: ''
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: llm
+      id: edge-start-diagnosis
+      source: start
+      sourceHandle: source
+      target: task_diagnosis
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: edge-diagnosis-retrieval
+      source: task_diagnosis
+      sourceHandle: source
+      target: official_retrieval_teacher
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: edge-retrieval-main
+      source: official_retrieval_teacher
+      sourceHandle: source
+      target: main_product
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: llm
+      id: edge-main-evidence
+      source: main_product
+      sourceHandle: source
+      target: evidence_plan
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: llm
+      id: edge-evidence-report
+      source: evidence_plan
+      sourceHandle: source
+      target: report_material
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: template-transform
+      id: edge-report-compose
+      source: report_material
+      sourceHandle: source
+      target: final_compose
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: template-transform
+        targetType: end
+      id: edge-compose-end
+      source: final_compose
+      sourceHandle: source
+      target: end
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        selected: false
+        title: 教师输入
+        type: start
+        variables:
+        - default: 实验单生成
+          label: 任务类型
+          options:
+          - 实验单生成
+          - 学生项目评价
+          - 课堂问题归纳
+          - 教学反思生成
+          required: true
+          type: select
+          variable: task_type
+        - default: 初中
+          label: 年级
+          max_length: 48
+          required: true
+          type: text-input
+          variable: grade
+        - default: 人工智能项目式学习
+          label: 课程主题
+          max_length: 120
+          required: true
+          type: text-input
+          variable: topic
+        - default: 学生已学习Python基础，了解人工智能应用案例，但对数据、模型和评价指标理解较弱。
+          label: 学生基础
+          max_length: 1000
+          required: false
+          type: paragraph
+          variable: class_profile
+        - default: ''
+          label: 学生作品/课堂记录/已有材料
+          max_length: 3000
+          required: false
+          type: paragraph
+          variable: materials
+      height: 213
+      id: start
+      position:
+        x: 80
+        y: 280
+      positionAbsolute:
+        x: 80
+        y: 280
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          window:
+            enabled: false
+            size: 0
+        model:
+          completion_params:
+            max_tokens: 700
+            temperature: 0.2
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - role: system
+          text: '你是中学信息科技/人工智能课程的“教师任务需求诊断器”。你的任务不是生成完整教学材料，而是把教师输入转化为后续工作流可用的设计约束。
+
+
+            必须严格依据教师输入，不要自行改年级、主题或课时。输出要短而准。
+
+
+            固定格式：
+
+            任务归类：
+
+            教学场景：
+
+            学生基础判断：
+
+            关键困难：
+
+            需要生成的核心产物：
+
+            必须保留的过程证据：
+
+            风险与边界：'
+        - role: user
+          text: '任务类型：{{#start.task_type#}}
+
+            年级：{{#start.grade#}}
+
+            课程主题：{{#start.topic#}}
+
+            学生基础：{{#start.class_profile#}}
+
+            已有材料：{{#start.materials#}}'
+        selected: false
+        title: 任务需求诊断
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: task_diagnosis
+      position:
+        x: 400
+        y: 245
+      positionAbsolute:
+        x: 400
+        y: 245
+      selected: true
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - Jlr7GWvSvgfrbLDxcN7v83vPQScDtZ3SqykqYfXuBpKotusg/vPt6sTn/mGF8JYH
+        desc: 基于任务诊断检索官方依据总索引、课程指导纲要、学生/教师AI素养框架、智慧平台指南、合规安全边界和官方PDF原文。
+        metadata_filtering_mode: disabled
+        metadata_model_config: null
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: ''
+          reranking_model:
+            model: ''
+            provider: ''
+          score_threshold: 0
+          score_threshold_enabled: false
+          top_k: 8
+        query_variable_selector:
+        - task_diagnosis
+        - text
+        retrieval_mode: multiple
+        selected: false
+        title: 官方依据检索
+        type: knowledge-retrieval
+      height: 134
+      id: official_retrieval_teacher
+      position:
+        x: 720
+        y: 245
+      positionAbsolute:
+        x: 720
+        y: 245
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - official_retrieval_teacher
+          - result
+        memory:
+          window:
+            enabled: false
+            size: 0
+        model:
+          completion_params:
+            max_tokens: 3200
+            temperature: 0.35
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - role: system
+          text: '你是中学信息科技教师的人工智能课程教学设计与评价助手。请基于教师输入、任务需求诊断和官方依据检索结果，生成可直接用于课堂或教研的主产物。
+
+
+            要求：
+
+            1. 内容必须适合中学信息科技/人工智能课堂。
+
+            2. 避免空泛口号，要给出可执行活动、问题、评价建议和教师观察点。
+
+            3. 优先使用官方依据检索结果中的课程目标、AI素养、项目评价和安全边界。
+
+            4. 必须体现学生自主探究，不替学生代写项目或报告。
+
+            5. 必须体现数据隐私、算法偏见、结果核验、版权或学术诚信中的至少两项。
+
+
+            按任务类型输出：
+
+            - 实验单生成：输出学习目标、实验准备、实验流程、学生任务单、教师巡视关注点、思考问题、评价量规、课后拓展。
+
+            - 学生项目评价：输出作品亮点、证据不足点、修改建议、教师追问、评价等级建议、下一步挑战。
+
+            - 课堂问题归纳：输出共性困难、可能原因、分层补救策略、下一课调整、微课/练习建议。
+
+            - 教学反思生成：输出课堂现象、教学成效、问题分析、改进措施、后续数据采集建议。
+
+
+            新增依据要求：
+
+            1. 输出开头必须增加【依据来源】，列出本次使用的官方文件或索引文档，优先包含《广东省中小学人工智能课程指导纲要（试行）》、学生/教师人工智能素养框架、国家智慧教育平台与人工智能融合应用指南。
+
+            2. 依据要转化为教学目标、课堂任务、评价证据和安全边界，不能停留在政策口号。
+
+            3. 不编造真实课堂数据，不编造官方条款编号；未检索到直接依据时要如实说明。
+
+
+            维度校正要求：
+
+            学生人工智能素养评价应使用广东省学生人工智能素养框架的四个一级维度：人智观念、技术实现、智能思维、伦理责任。
+
+            信息科技课程核心素养可用于课程衔接，但不要替代学生人工智能素养维度。
+
+            当主题涉及图像分类、植物识别、垃圾分类识别或项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。
+
+
+            版式要求：
+
+            不要输出超过12个连续下划线。需要学生填写的位置用“填写：”或 Markdown 表格空单元格表示，保证复制到 Word 或报告中不会产生过长横线。
+
+
+            版式补充要求：不要使用下划线作为填写线，也不要使用反斜杠转义下划线形式，例如 `\_\_\_\_`。需要学生填写的位置必须使用“填写：”或
+            Markdown 表格空单元格表示。'
+        - role: user
+          text: '任务类型：{{#start.task_type#}}
+
+            年级：{{#start.grade#}}
+
+            课程主题：{{#start.topic#}}
+
+            学生基础：{{#start.class_profile#}}
+
+            已有材料：{{#start.materials#}}
+
+
+            任务需求诊断：
+
+            {{#task_diagnosis.text#}}
+
+
+            官方依据检索结果：
+
+            {{#official_retrieval_teacher.result#}}'
+        selected: false
+        title: 教学/评价主产物
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: main_product
+      position:
+        x: 1040
+        y: 245
+      positionAbsolute:
+        x: 1040
+        y: 245
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          window:
+            enabled: false
+            size: 0
+        model:
+          completion_params:
+            max_tokens: 1800
+            temperature: 0.25
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - role: system
+          text: '你是创AI案例申报的“应用证据设计助手”。请基于教师输入、诊断、官方依据和主产物，设计课堂使用后的证据采集方案。
+
+
+            要求精炼，不要超过900字。
+
+            固定输出格式：
+
+            【课堂应用流程】课前、课中、课后各2-3条。
+
+            【学生证据】列出3类学生作品或记录。
+
+            【教师证据】列出3类教师保存材料。
+
+            【效果数据】给出可统计的数据项、采集方式和空白记录模板，不编造结果，不写具体示例数值。
+
+            【截图清单】列出申报报告建议截图。
+
+            【注意事项】说明隐私、匿名化和不得编造数据。
+
+
+            新增依据要求：
+
+            1. 输出开头必须增加【依据来源】，列出本次使用的官方文件或索引文档，优先包含《广东省中小学人工智能课程指导纲要（试行）》、学生/教师人工智能素养框架、国家智慧教育平台与人工智能融合应用指南。
+
+            2. 依据要转化为教学目标、课堂任务、评价证据和安全边界，不能停留在政策口号。
+
+            3. 不编造真实课堂数据，不编造官方条款编号；未检索到直接依据时要如实说明。
+
+
+            维度校正要求：
+
+            学生人工智能素养评价应使用广东省学生人工智能素养框架的四个一级维度：人智观念、技术实现、智能思维、伦理责任。
+
+            信息科技课程核心素养可用于课程衔接，但不要替代学生人工智能素养维度。
+
+            当主题涉及图像分类、植物识别、垃圾分类识别或项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。
+
+
+            版式要求：
+
+            不要输出超过12个连续下划线。需要学生填写的位置用“填写：”或 Markdown 表格空单元格表示，保证复制到 Word 或报告中不会产生过长横线。
+
+
+            版式补充要求：不要使用下划线作为填写线，也不要使用反斜杠转义下划线形式，例如 `\_\_\_\_`。需要学生填写的位置必须使用“填写：”或
+            Markdown 表格空单元格表示。'
+        - role: user
+          text: '任务类型：{{#start.task_type#}}
+
+            年级：{{#start.grade#}}
+
+            课程主题：{{#start.topic#}}
+
+            学生基础：{{#start.class_profile#}}
+
+            已有材料：{{#start.materials#}}
+
+
+            任务需求诊断：
+
+            {{#task_diagnosis.text#}}
+
+
+            官方依据检索结果：
+
+            {{#official_retrieval_teacher.result#}}
+
+
+            主产物：
+
+            {{#main_product.text#}}'
+        selected: false
+        title: 课堂证据方案
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: evidence_plan
+      position:
+        x: 1360
+        y: 245
+      positionAbsolute:
+        x: 1360
+        y: 245
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          window:
+            enabled: false
+            size: 0
+        model:
+          completion_params:
+            max_tokens: 1800
+            temperature: 0.25
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - role: system
+          text: '你是创AI案例开发与应用报告助手。请把前面节点的结果整理成可写入申报报告的素材。
+
+
+            要求：
+
+            1. 不写成完整论文，输出小节素材。
+
+            2. 明确说明 Dify 工作流、多节点协同、知识库和国产大模型 DeepSeek。
+
+            3. 突出教师自主开发、可复现、低成本、可落地。
+
+            4. 效果数据只能给采集口径和空白记录模板，不能编造真实结果，也不要给具体示例人数、百分比或提升幅度。
+
+            5. 不超过900字。
+
+
+            固定输出格式：
+
+            【开发背景素材】
+
+            【设计与开发素材】
+
+            【应用过程与效果素材】
+
+            【创新点素材】
+
+            【问题与改进素材】
+
+
+            新增依据要求：
+
+            1. 输出开头必须增加【依据来源】，列出本次使用的官方文件或索引文档，优先包含《广东省中小学人工智能课程指导纲要（试行）》、学生/教师人工智能素养框架、国家智慧教育平台与人工智能融合应用指南。
+
+            2. 依据要转化为教学目标、课堂任务、评价证据和安全边界，不能停留在政策口号。
+
+            3. 不编造真实课堂数据，不编造官方条款编号；未检索到直接依据时要如实说明。
+
+
+            维度校正要求：
+
+            学生人工智能素养评价应使用广东省学生人工智能素养框架的四个一级维度：人智观念、技术实现、智能思维、伦理责任。
+
+            信息科技课程核心素养可用于课程衔接，但不要替代学生人工智能素养维度。
+
+            当主题涉及图像分类、植物识别、垃圾分类识别或项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。
+
+
+            版式要求：
+
+            不要输出超过12个连续下划线。需要学生填写的位置用“填写：”或 Markdown 表格空单元格表示，保证复制到 Word 或报告中不会产生过长横线。
+
+
+            版式补充要求：不要使用下划线作为填写线，也不要使用反斜杠转义下划线形式，例如 `\_\_\_\_`。需要学生填写的位置必须使用“填写：”或
+            Markdown 表格空单元格表示。'
+        - role: user
+          text: '任务类型：{{#start.task_type#}}
+
+            年级：{{#start.grade#}}
+
+            课程主题：{{#start.topic#}}
+
+
+            任务需求诊断：
+
+            {{#task_diagnosis.text#}}
+
+
+            官方依据检索结果：
+
+            {{#official_retrieval_teacher.result#}}
+
+
+            主产物：
+
+            {{#main_product.text#}}
+
+
+            应用证据方案：
+
+            {{#evidence_plan.text#}}'
+        selected: false
+        title: 报告素材整理
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: report_material
+      position:
+        x: 1680
+        y: 245
+      positionAbsolute:
+        x: 1680
+        y: 245
+      type: custom
+      width: 242
+    - data:
+        desc: 用模板拼接主产物、证据方案和报告素材，避免最后一步再次调用模型。
+        selected: false
+        template: '## 第一部分：教师可用主产物
+
+
+          {{ main_product }}
+
+
+          ---
+
+
+          ## 第二部分：课堂应用与证据采集
+
+
+          {{ evidence_plan }}
+
+
+          ---
+
+
+          ## 第三部分：申报报告可用素材
+
+
+          {{ report_material }}'
+        title: 最终结果整理
+        type: template-transform
+        variables:
+        - value_selector:
+          - main_product
+          - text
+          variable: main_product
+        - value_selector:
+          - evidence_plan
+          - text
+          variable: evidence_plan
+        - value_selector:
+          - report_material
+          - text
+          variable: report_material
+      height: 54
+      id: final_compose
+      position:
+        x: 2000
+        y: 245
+      positionAbsolute:
+        x: 2000
+        y: 245
+      type: custom
+      width: 242
+    - data:
+        outputs:
+        - value_selector:
+          - final_compose
+          - output
+          variable: result
+        - value_selector:
+          - main_product
+          - text
+          variable: main_product
+        - value_selector:
+          - evidence_plan
+          - text
+          variable: evidence_plan
+        - value_selector:
+          - report_material
+          - text
+          variable: report_material
+        selected: false
+        title: 输出结果
+        type: end
+      height: 166
+      id: end
+      position:
+        x: 2320
+        y: 280
+      positionAbsolute:
+        x: 2320
+        y: 280
+      type: custom
+      width: 242
+    viewport:
+      x: -85.92253761920585
+      y: 256.75454847925346
+      zoom: 0.6562885753511215
+  rag_pipeline_variables: []
+
