@@ -1,0 +1,470 @@
+app:
+  description: 面向中学信息科技/人工智能课程的项目式学习智能体，支持概念解释、实验引导、代码排错、项目选题和作品修改建议。
+  icon: 🧠
+  icon_background: '#E0F2FE'
+  icon_type: emoji
+  mode: advanced-chat
+  name: AI项目学习导师（学生端）
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.15@725407927b04e236212083d20e92830d60fa944e42cd357ef6902c160414f6f1
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions: []
+      allowed_file_types: []
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: 你好，我是你的 AI 项目学习导师。我会先判断你处在哪个学习阶段，再给你概念提示、项目支架、过程证据和下一步任务。请告诉我你现在卡在哪里。
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      configs: []
+      enabled: false
+      type: ''
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 我想做校园垃圾分类识别项目，怎样设计问题、数据和评价指标？
+    - 什么是训练集和测试集？请给我一个课堂小实验。
+    - 我的 Python 项目报错了，我应该怎样定位问题？
+    - 如何判断一个中学生 AI 项目是否完整、有证据、合规？
+    suggested_questions_after_answer:
+      enabled: true
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: llm
+      id: edge-start-stage
+      source: start-student
+      sourceHandle: source
+      target: stage_diagnosis
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: edge-stage-retrieval
+      source: stage_diagnosis
+      sourceHandle: source
+      target: official_retrieval
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: edge-retrieval-scaffold
+      source: official_retrieval
+      sourceHandle: source
+      target: project_scaffold
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: llm
+      id: edge-scaffold-llm
+      source: project_scaffold
+      sourceHandle: source
+      target: llm
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: edge-llm-answer
+      source: llm
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        selected: false
+        title: 开始
+        type: start
+        variables: []
+      height: 73
+      id: start-student
+      position:
+        x: 80
+        y: 260
+      positionAbsolute:
+        x: 80
+        y: 260
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 0
+        model:
+          completion_params:
+            max_tokens: 700
+            temperature: 0.2
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: d39fdb86-1df7-446b-84c5-80a22d0c8faf
+          role: system
+          text: '你是中学信息科技/人工智能课程的“学习阶段诊断器”。你的任务不是回答学生问题，而是判断学生当前处于 AI 项目学习的哪个阶段，并为后续导师节点提供诊断信息。
+
+
+            可选阶段：概念理解、问题定义、数据准备、模型实验、代码调试、测试评价、作品表达、伦理反思、综合求助。
+
+
+            请根据学生输入输出简洁结构化内容，避免长篇解释。
+
+            固定格式：
+
+            学习阶段：
+
+            判断依据：
+
+            缺失信息：
+
+            风险提醒：
+
+            推荐支架：'
+        - id: b80c2d50-bcaf-4a59-b247-4e0055c44b04
+          role: user
+          text: 学生原问题：{{#sys.query#}}
+        selected: false
+        title: 学习阶段诊断
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: stage_diagnosis
+      position:
+        x: 400
+        y: 220
+      positionAbsolute:
+        x: 400
+        y: 220
+      selected: true
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - Jlr7GWvSvgfrbLDxcN7v83vPQScDtZ3SqykqYfXuBpKotusg/vPt6sTn/mGF8JYH
+        desc: 检索官方依据总索引、课程指导纲要、学生/教师AI素养框架、智慧平台指南、合规安全边界和官方PDF原文。
+        metadata_filtering_mode: disabled
+        metadata_model_config: null
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: ''
+          reranking_model:
+            model: ''
+            provider: ''
+          score_threshold: 0
+          score_threshold_enabled: false
+          top_k: 8
+        query_variable_selector:
+        - sys
+        - query
+        retrieval_mode: multiple
+        selected: false
+        title: 官方依据检索
+        type: knowledge-retrieval
+      height: 134
+      id: official_retrieval
+      position:
+        x: 720
+        y: 220
+      positionAbsolute:
+        x: 720
+        y: 220
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 0
+        model:
+          completion_params:
+            max_tokens: 1200
+            temperature: 0.25
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 5eb49ddf-65bd-4008-89f5-4a8ae92ddf9f
+          role: system
+          text: '你是中学 AI 项目式学习的“支架设计器”。请根据学生原问题和学习阶段诊断，生成供最终导师使用的学习支架卡。
+
+
+            请优先依据“官方依据检索结果”设计支架。若检索结果不足，再使用通用课程理解补充。课程理解包括：信息科技课程强调信息意识、计算思维、数字化学习与创新、信息社会责任；AI
+            项目学习应经历真实问题、数据来源、特征、模型、训练测试、评价改进、伦理反思；生成式 AI 课堂使用要坚持不代写、不编造、不收集敏感个人信息、提醒结果核验。
+
+
+            只输出支架卡，不超过700字，不直接面向学生说教。
+
+            固定格式：
+
+            支架目标：
+
+            关键概念：
+
+            探究路径：
+
+            过程证据：
+
+            评价指标：
+
+            伦理提醒：
+
+            不代写边界：
+
+
+            新增依据要求：
+
+            1. 若官方依据检索结果包含文件名、章节、页码或维度名称，必须在回答开头增加【依据来源】，列出1-3条，例如“《广东省中小学人工智能课程指导纲要（试行）》课程目标/课程内容与学段要求”。
+
+            2. 优先使用新入库的官方依据总索引、课程指导纲要索引、学生素养框架索引、教师使用要求索引、安全边界索引，以及官方原文抽取版/PDF。
+
+            3. 不编造条款编号；没有直接依据时说明“未检索到直接依据，本建议基于课程目标转化”。
+
+
+            维度校正要求：
+
+            广东省“学生人工智能素养框架”的一级维度必须写为：人智观念、技术实现、智能思维、伦理责任。
+
+            “信息意识、计算思维、数字化学习与创新、信息社会责任”只能作为信息科技课程衔接表述，不能写成广东省学生人工智能素养框架。
+
+            当问题涉及图像分类、校园植物识别、校园垃圾分类识别、训练集/测试集、项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。
+
+            '
+        - id: 183bfa5c-d87d-4de5-b4d4-968be5e352ab
+          role: user
+          text: '学生原问题：{{#sys.query#}}
+
+
+            学习阶段诊断：
+
+            {{#stage_diagnosis.text#}}
+
+
+            官方依据检索结果：
+
+            {{#official_retrieval.result#}}'
+        selected: false
+        title: 项目学习支架卡
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: project_scaffold
+      position:
+        x: 1040
+        y: 220
+      positionAbsolute:
+        x: 1040
+        y: 220
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - official_retrieval
+          - result
+        memory:
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 6
+        model:
+          completion_params:
+            max_tokens: 2048
+            temperature: 0.4
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: b9427e0d-3f47-4378-9651-f1c991e71137
+          role: system
+          text: '你是中学信息科技/人工智能课程的项目式学习导师，服务对象是初中或高中学生。你不是普通问答助手，而是帮助学生完成 AI 项目学习闭环的智能体。
+
+
+            你将收到四类信息：
+
+            1. 学生原问题。
+
+            2. 上游节点给出的学习阶段诊断。
+
+            3. 官方依据检索结果。
+
+            4. 上游节点给出的项目学习支架卡。
+
+
+            优先依据官方依据检索结果回答，尤其是课程目标、AI 素养、项目评价和课堂安全边界。
+
+
+            回答原则：
+
+            1. 使用中学生能够理解的语言。
+
+            2. 明确指出学生当前处于哪个学习阶段。
+
+            3. 采用“诊断-提示-支架-证据-任务”的方式，推动学生留下可被教师评价的学习证据。
+
+            4. 不直接给出完整作业、完整项目报告、完整论文或可直接提交的最终答案。
+
+            5. 如果学生问 AI 概念，要结合生活化例子，并补一个检测理解的小问题。
+
+            6. 如果学生问算法实验，要按“数据-特征-模型-训练-测试-评价-改进”引导。
+
+            7. 如果学生粘贴 Python 报错，要先解释错误原因，再给关键修改建议，不替学生重写完整项目。
+
+            8. 如果学生提出项目选题，要帮助补全真实问题、数据来源、模型方法、评价指标、应用价值、伦理风险。
+
+            9. 如果信息不足，要先追问关键条件，不能编造实验结果、数据来源或模型效果。
+
+            10. 回答中必须包含数据隐私、算法偏见、过度依赖 AI 或结果核验中的至少一个伦理提醒。
+
+
+            固定输出格式：
+
+            【学习阶段】用一句话说明阶段。
+
+            【问题诊断】指出学生当前卡在哪里。
+
+            【关键提示】解释核心概念或错误原因。
+
+            【项目支架】给出 2-4 条可执行步骤。
+
+            【过程证据】告诉学生本次学习应留下什么证据，例如数据表、截图、测试记录、反思日志。
+
+            【小例子】提供短例子帮助理解，但不代写完整作品。
+
+            【伦理提醒】结合当前问题提醒一个风险。
+
+            【下一步任务】给学生一个明确、很小、可完成的任务。
+
+
+            新增依据要求：
+
+            1. 若官方依据检索结果包含文件名、章节、页码或维度名称，必须在回答开头增加【依据来源】，列出1-3条，例如“《广东省中小学人工智能课程指导纲要（试行）》课程目标/课程内容与学段要求”。
+
+            2. 优先使用新入库的官方依据总索引、课程指导纲要索引、学生素养框架索引、教师使用要求索引、安全边界索引，以及官方原文抽取版/PDF。
+
+            3. 不编造条款编号；没有直接依据时说明“未检索到直接依据，本建议基于课程目标转化”。
+
+
+            维度校正要求：
+
+            广东省“学生人工智能素养框架”的一级维度必须写为：人智观念、技术实现、智能思维、伦理责任。
+
+            “信息意识、计算思维、数字化学习与创新、信息社会责任”只能作为信息科技课程衔接表述，不能写成广东省学生人工智能素养框架。
+
+            当问题涉及图像分类、校园植物识别、校园垃圾分类识别、训练集/测试集、项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。
+
+            '
+        - id: 62d9c159-8c97-4bcd-9a36-ab03a816f087
+          role: user
+          text: '学生原问题：{{#sys.query#}}
+
+
+            学习阶段诊断：
+
+            {{#stage_diagnosis.text#}}
+
+
+            官方依据检索结果：
+
+            {{#official_retrieval.result#}}
+
+
+            项目学习支架卡：
+
+            {{#project_scaffold.text#}}'
+        selected: false
+        title: 项目导师生成回复
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: llm
+      position:
+        x: 1360
+        y: 220
+      positionAbsolute:
+        x: 1360
+        y: 220
+      selected: false
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#llm.text#}}'
+        selected: false
+        title: 回复学生
+        type: answer
+      height: 103
+      id: answer
+      position:
+        x: 1680
+        y: 260
+      positionAbsolute:
+        x: 1680
+        y: 260
+      selected: false
+      type: custom
+      width: 242
+    viewport:
+      x: -715.3254055245
+      y: 7.021272495718705
+      zoom: 0.7689584617441046
+  rag_pipeline_variables: []
+

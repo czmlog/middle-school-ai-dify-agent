@@ -1,0 +1,562 @@
+{
+  "hash": "b39e3a98bb96d41ddc1c68f98f463f69333d202340d41b7f20f2ffdbac02b5a1",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "type": "custom",
+        "data": {
+          "title": "教师输入",
+          "type": "start",
+          "variables": [
+            {
+              "variable": "task_type",
+              "label": "任务类型",
+              "type": "select",
+              "required": true,
+              "options": [
+                "实验单生成",
+                "学生项目评价",
+                "课堂问题归纳",
+                "教学反思生成"
+              ],
+              "default": "实验单生成"
+            },
+            {
+              "variable": "grade",
+              "label": "年级",
+              "type": "text-input",
+              "required": true,
+              "max_length": 48,
+              "default": "初中"
+            },
+            {
+              "variable": "topic",
+              "label": "课程主题",
+              "type": "text-input",
+              "required": true,
+              "max_length": 120,
+              "default": "人工智能项目式学习"
+            },
+            {
+              "variable": "class_profile",
+              "label": "学生基础",
+              "type": "paragraph",
+              "required": false,
+              "max_length": 1000,
+              "default": "学生已学习Python基础，了解人工智能应用案例，但对数据、模型和评价指标理解较弱。"
+            },
+            {
+              "variable": "materials",
+              "label": "学生作品/课堂记录/已有材料",
+              "type": "paragraph",
+              "required": false,
+              "max_length": 3000,
+              "default": ""
+            }
+          ],
+          "selected": false
+        },
+        "position": {
+          "x": 80,
+          "y": 280
+        },
+        "positionAbsolute": {
+          "x": 80,
+          "y": 280
+        },
+        "width": 242,
+        "height": 213
+      },
+      {
+        "id": "task_diagnosis",
+        "type": "custom",
+        "data": {
+          "title": "任务需求诊断",
+          "type": "llm",
+          "model": {
+            "provider": "langgenius/deepseek/deepseek",
+            "name": "deepseek-chat",
+            "mode": "chat",
+            "completion_params": {
+              "temperature": 0.2,
+              "max_tokens": 700
+            }
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是中学信息科技/人工智能课程的“教师任务需求诊断器”。你的任务不是生成完整教学材料，而是把教师输入转化为后续工作流可用的设计约束。\n\n必须严格依据教师输入，不要自行改年级、主题或课时。输出要短而准。\n\n固定格式：\n任务归类：\n教学场景：\n学生基础判断：\n关键困难：\n需要生成的核心产物：\n必须保留的过程证据：\n风险与边界："
+            },
+            {
+              "role": "user",
+              "text": "任务类型：{{#start.task_type#}}\n年级：{{#start.grade#}}\n课程主题：{{#start.topic#}}\n学生基础：{{#start.class_profile#}}\n已有材料：{{#start.materials#}}"
+            }
+          ],
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "vision": {
+            "enabled": false
+          },
+          "memory": {
+            "window": {
+              "enabled": false,
+              "size": 0
+            }
+          },
+          "selected": false
+        },
+        "position": {
+          "x": 400,
+          "y": 245
+        },
+        "positionAbsolute": {
+          "x": 400,
+          "y": 245
+        },
+        "width": 242,
+        "height": 88,
+        "selected": true
+      },
+      {
+        "id": "official_retrieval_teacher",
+        "type": "custom",
+        "data": {
+          "title": "官方依据检索",
+          "type": "knowledge-retrieval",
+          "desc": "基于任务诊断检索官方依据总索引、课程指导纲要、学生/教师AI素养框架、智慧平台指南、合规安全边界和官方PDF原文。",
+          "dataset_ids": [
+            "faff196d-07ce-442c-b712-47a987f7bd16"
+          ],
+          "query_variable_selector": [
+            "task_diagnosis",
+            "text"
+          ],
+          "retrieval_mode": "multiple",
+          "multiple_retrieval_config": {
+            "top_k": 8,
+            "score_threshold": 0,
+            "score_threshold_enabled": false,
+            "reranking_enable": false,
+            "reranking_mode": "",
+            "reranking_model": {
+              "provider": "",
+              "model": ""
+            }
+          },
+          "metadata_filtering_mode": "disabled",
+          "metadata_model_config": null,
+          "selected": false
+        },
+        "position": {
+          "x": 720,
+          "y": 245
+        },
+        "positionAbsolute": {
+          "x": 720,
+          "y": 245
+        },
+        "width": 242,
+        "height": 134
+      },
+      {
+        "id": "main_product",
+        "type": "custom",
+        "data": {
+          "title": "教学/评价主产物",
+          "type": "llm",
+          "model": {
+            "provider": "langgenius/deepseek/deepseek",
+            "name": "deepseek-chat",
+            "mode": "chat",
+            "completion_params": {
+              "temperature": 0.35,
+              "max_tokens": 3200
+            }
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是中学信息科技教师的人工智能课程教学设计与评价助手。请基于教师输入、任务需求诊断和官方依据检索结果，生成可直接用于课堂或教研的主产物。\n\n要求：\n1. 内容必须适合中学信息科技/人工智能课堂。\n2. 避免空泛口号，要给出可执行活动、问题、评价建议和教师观察点。\n3. 优先使用官方依据检索结果中的课程目标、AI素养、项目评价和安全边界。\n4. 必须体现学生自主探究，不替学生代写项目或报告。\n5. 必须体现数据隐私、算法偏见、结果核验、版权或学术诚信中的至少两项。\n\n按任务类型输出：\n- 实验单生成：输出学习目标、实验准备、实验流程、学生任务单、教师巡视关注点、思考问题、评价量规、课后拓展。\n- 学生项目评价：输出作品亮点、证据不足点、修改建议、教师追问、评价等级建议、下一步挑战。\n- 课堂问题归纳：输出共性困难、可能原因、分层补救策略、下一课调整、微课/练习建议。\n- 教学反思生成：输出课堂现象、教学成效、问题分析、改进措施、后续数据采集建议。\n\n新增依据要求：\n1. 输出开头必须增加【依据来源】，列出本次使用的官方文件或索引文档，优先包含《广东省中小学人工智能课程指导纲要（试行）》、学生/教师人工智能素养框架、国家智慧教育平台与人工智能融合应用指南。\n2. 依据要转化为教学目标、课堂任务、评价证据和安全边界，不能停留在政策口号。\n3. 不编造真实课堂数据，不编造官方条款编号；未检索到直接依据时要如实说明。\n\n维度校正要求：\n学生人工智能素养评价应使用广东省学生人工智能素养框架的四个一级维度：人智观念、技术实现、智能思维、伦理责任。\n信息科技课程核心素养可用于课程衔接，但不要替代学生人工智能素养维度。\n当主题涉及图像分类、植物识别、垃圾分类识别或项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。\n\n版式要求：\n不要输出超过12个连续下划线。需要学生填写的位置用“填写：”或 Markdown 表格空单元格表示，保证复制到 Word 或报告中不会产生过长横线。\n\n版式补充要求：不要使用下划线作为填写线，也不要使用反斜杠转义下划线形式，例如 `\\_\\_\\_\\_`。需要学生填写的位置必须使用“填写：”或 Markdown 表格空单元格表示。"
+            },
+            {
+              "role": "user",
+              "text": "任务类型：{{#start.task_type#}}\n年级：{{#start.grade#}}\n课程主题：{{#start.topic#}}\n学生基础：{{#start.class_profile#}}\n已有材料：{{#start.materials#}}\n\n任务需求诊断：\n{{#task_diagnosis.text#}}\n\n官方依据检索结果：\n{{#official_retrieval_teacher.result#}}"
+            }
+          ],
+          "context": {
+            "enabled": true,
+            "variable_selector": [
+              "official_retrieval_teacher",
+              "result"
+            ]
+          },
+          "vision": {
+            "enabled": false
+          },
+          "memory": {
+            "window": {
+              "enabled": false,
+              "size": 0
+            }
+          },
+          "selected": false
+        },
+        "position": {
+          "x": 1040,
+          "y": 245
+        },
+        "positionAbsolute": {
+          "x": 1040,
+          "y": 245
+        },
+        "width": 242,
+        "height": 88
+      },
+      {
+        "id": "evidence_plan",
+        "type": "custom",
+        "data": {
+          "title": "课堂证据方案",
+          "type": "llm",
+          "model": {
+            "provider": "langgenius/deepseek/deepseek",
+            "name": "deepseek-chat",
+            "mode": "chat",
+            "completion_params": {
+              "temperature": 0.25,
+              "max_tokens": 1800
+            }
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是创AI案例申报的“应用证据设计助手”。请基于教师输入、诊断、官方依据和主产物，设计课堂使用后的证据采集方案。\n\n要求精炼，不要超过900字。\n固定输出格式：\n【课堂应用流程】课前、课中、课后各2-3条。\n【学生证据】列出3类学生作品或记录。\n【教师证据】列出3类教师保存材料。\n【效果数据】给出可统计的数据项、采集方式和空白记录模板，不编造结果，不写具体示例数值。\n【截图清单】列出申报报告建议截图。\n【注意事项】说明隐私、匿名化和不得编造数据。\n\n新增依据要求：\n1. 输出开头必须增加【依据来源】，列出本次使用的官方文件或索引文档，优先包含《广东省中小学人工智能课程指导纲要（试行）》、学生/教师人工智能素养框架、国家智慧教育平台与人工智能融合应用指南。\n2. 依据要转化为教学目标、课堂任务、评价证据和安全边界，不能停留在政策口号。\n3. 不编造真实课堂数据，不编造官方条款编号；未检索到直接依据时要如实说明。\n\n维度校正要求：\n学生人工智能素养评价应使用广东省学生人工智能素养框架的四个一级维度：人智观念、技术实现、智能思维、伦理责任。\n信息科技课程核心素养可用于课程衔接，但不要替代学生人工智能素养维度。\n当主题涉及图像分类、植物识别、垃圾分类识别或项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。\n\n版式要求：\n不要输出超过12个连续下划线。需要学生填写的位置用“填写：”或 Markdown 表格空单元格表示，保证复制到 Word 或报告中不会产生过长横线。\n\n版式补充要求：不要使用下划线作为填写线，也不要使用反斜杠转义下划线形式，例如 `\\_\\_\\_\\_`。需要学生填写的位置必须使用“填写：”或 Markdown 表格空单元格表示。"
+            },
+            {
+              "role": "user",
+              "text": "任务类型：{{#start.task_type#}}\n年级：{{#start.grade#}}\n课程主题：{{#start.topic#}}\n学生基础：{{#start.class_profile#}}\n已有材料：{{#start.materials#}}\n\n任务需求诊断：\n{{#task_diagnosis.text#}}\n\n官方依据检索结果：\n{{#official_retrieval_teacher.result#}}\n\n主产物：\n{{#main_product.text#}}"
+            }
+          ],
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "vision": {
+            "enabled": false
+          },
+          "memory": {
+            "window": {
+              "enabled": false,
+              "size": 0
+            }
+          },
+          "selected": false
+        },
+        "position": {
+          "x": 1360,
+          "y": 245
+        },
+        "positionAbsolute": {
+          "x": 1360,
+          "y": 245
+        },
+        "width": 242,
+        "height": 88
+      },
+      {
+        "id": "report_material",
+        "type": "custom",
+        "data": {
+          "title": "报告素材整理",
+          "type": "llm",
+          "model": {
+            "provider": "langgenius/deepseek/deepseek",
+            "name": "deepseek-chat",
+            "mode": "chat",
+            "completion_params": {
+              "temperature": 0.25,
+              "max_tokens": 1800
+            }
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是创AI案例开发与应用报告助手。请把前面节点的结果整理成可写入申报报告的素材。\n\n要求：\n1. 不写成完整论文，输出小节素材。\n2. 明确说明 Dify 工作流、多节点协同、知识库和国产大模型 DeepSeek。\n3. 突出教师自主开发、可复现、低成本、可落地。\n4. 效果数据只能给采集口径和空白记录模板，不能编造真实结果，也不要给具体示例人数、百分比或提升幅度。\n5. 不超过900字。\n\n固定输出格式：\n【开发背景素材】\n【设计与开发素材】\n【应用过程与效果素材】\n【创新点素材】\n【问题与改进素材】\n\n新增依据要求：\n1. 输出开头必须增加【依据来源】，列出本次使用的官方文件或索引文档，优先包含《广东省中小学人工智能课程指导纲要（试行）》、学生/教师人工智能素养框架、国家智慧教育平台与人工智能融合应用指南。\n2. 依据要转化为教学目标、课堂任务、评价证据和安全边界，不能停留在政策口号。\n3. 不编造真实课堂数据，不编造官方条款编号；未检索到直接依据时要如实说明。\n\n维度校正要求：\n学生人工智能素养评价应使用广东省学生人工智能素养框架的四个一级维度：人智观念、技术实现、智能思维、伦理责任。\n信息科技课程核心素养可用于课程衔接，但不要替代学生人工智能素养维度。\n当主题涉及图像分类、植物识别、垃圾分类识别或项目评价证据时，优先检索并引用“07_中学AI项目官方依据速查卡_图像分类与评价证据.md”。\n\n版式要求：\n不要输出超过12个连续下划线。需要学生填写的位置用“填写：”或 Markdown 表格空单元格表示，保证复制到 Word 或报告中不会产生过长横线。\n\n版式补充要求：不要使用下划线作为填写线，也不要使用反斜杠转义下划线形式，例如 `\\_\\_\\_\\_`。需要学生填写的位置必须使用“填写：”或 Markdown 表格空单元格表示。"
+            },
+            {
+              "role": "user",
+              "text": "任务类型：{{#start.task_type#}}\n年级：{{#start.grade#}}\n课程主题：{{#start.topic#}}\n\n任务需求诊断：\n{{#task_diagnosis.text#}}\n\n官方依据检索结果：\n{{#official_retrieval_teacher.result#}}\n\n主产物：\n{{#main_product.text#}}\n\n应用证据方案：\n{{#evidence_plan.text#}}"
+            }
+          ],
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "vision": {
+            "enabled": false
+          },
+          "memory": {
+            "window": {
+              "enabled": false,
+              "size": 0
+            }
+          },
+          "selected": false
+        },
+        "position": {
+          "x": 1680,
+          "y": 245
+        },
+        "positionAbsolute": {
+          "x": 1680,
+          "y": 245
+        },
+        "width": 242,
+        "height": 88
+      },
+      {
+        "id": "final_compose",
+        "type": "custom",
+        "data": {
+          "title": "最终结果整理",
+          "type": "template-transform",
+          "desc": "用模板拼接主产物、证据方案和报告素材，避免最后一步再次调用模型。",
+          "variables": [
+            {
+              "variable": "main_product",
+              "value_selector": [
+                "main_product",
+                "text"
+              ]
+            },
+            {
+              "variable": "evidence_plan",
+              "value_selector": [
+                "evidence_plan",
+                "text"
+              ]
+            },
+            {
+              "variable": "report_material",
+              "value_selector": [
+                "report_material",
+                "text"
+              ]
+            }
+          ],
+          "template": "## 第一部分：教师可用主产物\n\n{{ main_product }}\n\n---\n\n## 第二部分：课堂应用与证据采集\n\n{{ evidence_plan }}\n\n---\n\n## 第三部分：申报报告可用素材\n\n{{ report_material }}",
+          "selected": false
+        },
+        "position": {
+          "x": 2000,
+          "y": 245
+        },
+        "positionAbsolute": {
+          "x": 2000,
+          "y": 245
+        },
+        "width": 242,
+        "height": 54
+      },
+      {
+        "id": "end",
+        "type": "custom",
+        "data": {
+          "title": "输出结果",
+          "type": "end",
+          "outputs": [
+            {
+              "variable": "result",
+              "value_selector": [
+                "final_compose",
+                "output"
+              ]
+            },
+            {
+              "variable": "main_product",
+              "value_selector": [
+                "main_product",
+                "text"
+              ]
+            },
+            {
+              "variable": "evidence_plan",
+              "value_selector": [
+                "evidence_plan",
+                "text"
+              ]
+            },
+            {
+              "variable": "report_material",
+              "value_selector": [
+                "report_material",
+                "text"
+              ]
+            }
+          ],
+          "selected": false
+        },
+        "position": {
+          "x": 2320,
+          "y": 280
+        },
+        "positionAbsolute": {
+          "x": 2320,
+          "y": 280
+        },
+        "width": 242,
+        "height": 166
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-start-diagnosis",
+        "type": "custom",
+        "source": "start",
+        "target": "task_diagnosis",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "start",
+          "targetType": "llm"
+        }
+      },
+      {
+        "id": "edge-diagnosis-retrieval",
+        "type": "custom",
+        "source": "task_diagnosis",
+        "target": "official_retrieval_teacher",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "llm",
+          "targetType": "knowledge-retrieval"
+        }
+      },
+      {
+        "id": "edge-retrieval-main",
+        "type": "custom",
+        "source": "official_retrieval_teacher",
+        "target": "main_product",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "knowledge-retrieval",
+          "targetType": "llm"
+        }
+      },
+      {
+        "id": "edge-main-evidence",
+        "type": "custom",
+        "source": "main_product",
+        "target": "evidence_plan",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "llm",
+          "targetType": "llm"
+        }
+      },
+      {
+        "id": "edge-evidence-report",
+        "type": "custom",
+        "source": "evidence_plan",
+        "target": "report_material",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "llm",
+          "targetType": "llm"
+        }
+      },
+      {
+        "id": "edge-report-compose",
+        "type": "custom",
+        "source": "report_material",
+        "target": "final_compose",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "llm",
+          "targetType": "template-transform"
+        }
+      },
+      {
+        "id": "edge-compose-end",
+        "type": "custom",
+        "source": "final_compose",
+        "target": "end",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "template-transform",
+          "targetType": "end"
+        }
+      }
+    ],
+    "viewport": {
+      "x": -85.92253761920585,
+      "y": 256.75454847925346,
+      "zoom": 0.6562885753511215
+    }
+  },
+  "features": {
+    "opening_statement": "",
+    "suggested_questions": [],
+    "suggested_questions_after_answer": {
+      "enabled": false
+    },
+    "text_to_speech": {
+      "enabled": false,
+      "voice": "",
+      "language": ""
+    },
+    "speech_to_text": {
+      "enabled": false
+    },
+    "retriever_resource": {
+      "enabled": true
+    },
+    "sensitive_word_avoidance": {
+      "enabled": false,
+      "type": "",
+      "configs": []
+    },
+    "file_upload": {
+      "image": {
+        "enabled": false,
+        "number_limits": 3,
+        "transfer_methods": [
+          "local_file",
+          "remote_url"
+        ]
+      },
+      "enabled": false,
+      "allowed_file_types": [],
+      "allowed_file_extensions": [],
+      "allowed_file_upload_methods": [
+        "local_file",
+        "remote_url"
+      ],
+      "number_limits": 3,
+      "fileUploadConfig": {
+        "file_size_limit": 15,
+        "batch_count_limit": 5,
+        "file_upload_limit": 20,
+        "image_file_size_limit": 10,
+        "video_file_size_limit": 100,
+        "audio_file_size_limit": 50,
+        "workflow_file_upload_limit": 10,
+        "image_file_batch_limit": 10,
+        "single_chunk_attachment_limit": 10,
+        "attachment_image_file_size_limit": 2
+      }
+    }
+  },
+  "environment_variables": [],
+  "conversation_variables": [],
+  "rag_pipeline_variables": []
+}
